@@ -144,5 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial load
   loadStatus();
-  setInterval(loadStatus, 2000);
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') loadStatus();
+  });
 });
