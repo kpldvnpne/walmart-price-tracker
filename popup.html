@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 300px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0f1e;
+      color: #e8edf5;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0071ce 0%, #004c91 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon { font-size: 24px; }
+    .header-text h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.03em; }
+    .header-text p { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+
+    .tabs {
+      display: flex;
+      background: #0d1425;
+      border-bottom: 1px solid #1e2d4a;
+    }
+    .tab {
+      flex: 1; padding: 10px;
+      font-size: 12px; font-weight: 600; text-align: center;
+      cursor: pointer; color: #6b7fa3;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      user-select: none;
+    }
+    .tab:hover { color: #94a3c0; }
+    .tab.active { color: #0071ce; border-bottom-color: #0071ce; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .content { padding: 16px 20px; }
+
+    .status-card {
+      background: #131929;
+      border: 1px solid #1e2d4a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .status-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .status-row:last-child { margin-bottom: 0; }
+    .label { font-size: 11px; color: #6b7fa3; text-transform: uppercase; letter-spacing: 0.06em; }
+    .price-val { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+    .price-val.above { color: #4ade80; }
+    .price-val.below { color: #f87171; }
+    .price-val.unknown { color: #6b7fa3; font-size: 14px; }
+    .threshold-text { font-size: 13px; color: #94a3c0; font-weight: 600; }
+    .time-val { font-size: 12px; color: #6b7fa3; }
+
+    .alert-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .alert-badge.active {
+      background: rgba(248,113,113,0.15); color: #f87171;
+      border: 1px solid rgba(248,113,113,0.3);
+    }
+    .alert-badge.inactive {
+      background: rgba(74,222,128,0.1); color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+    .error-msg {
+      font-size: 11px; color: #f87171;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.2);
+      border-radius: 6px; padding: 8px 10px; margin-bottom: 12px;
+    }
+
+    /* Settings */
+    .settings-section { margin-bottom: 16px; }
+    .settings-section-title {
+      font-size: 10px; font-weight: 700; color: #3a4a6a;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 11px; color: #6b7fa3;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-prefix {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 13px; color: #6b7fa3; pointer-events: none;
+    }
+    .input-suffix {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 11px; color: #6b7fa3; pointer-events: none;
+    }
+    input[type="number"] {
+      width: 100%;
+      background: #131929; border: 1px solid #1e2d4a;
+      border-radius: 8px; color: #e8edf5;
+      font-size: 14px; font-weight: 600;
+      padding: 9px 36px 9px 28px; outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus { border-color: #0071ce; }
+    input[type="number"].no-prefix { padding-left: 12px; }
+
+    .preset-row { display: flex; gap: 6px; margin-top: 6px; }
+    .preset {
+      flex: 1; padding: 5px 4px; border-radius: 6px;
+      border: 1px solid #1e2d4a; background: #131929;
+      color: #6b7fa3; font-size: 11px; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.15s;
+      user-select: none;
+    }
+    .preset:hover { border-color: #0071ce; color: #e8edf5; }
+    .preset.selected { border-color: #0071ce; background: rgba(0,113,206,0.15); color: #0071ce; }
+
+    .save-confirm {
+      display: none; text-align: center; font-size: 11px; color: #4ade80;
+      padding: 6px; margin-bottom: 8px;
+      background: rgba(74,222,128,0.08);
+      border-radius: 6px; border: 1px solid rgba(74,222,128,0.2);
+    }
+    .save-confirm.show { display: block; }
+
+    .btn {
+      width: 100%; padding: 10px; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+      letter-spacing: 0.02em; margin-bottom: 8px;
+    }
+    .btn-primary { background: linear-gradient(135deg, #0071ce, #004c91); color: white; }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary { background: #131929; color: #94a3c0; border: 1px solid #1e2d4a; }
+    .btn-secondary:hover { border-color: #0071ce; color: #e8edf5; }
+    .btn-success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; }
+    .btn-success:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    .footer { text-align: center; padding: 10px 20px 14px; font-size: 10px; color: #3a4a6a; }
+    .footer a { color: #0071ce; text-decoration: none; }
+
+    .spinner {
+      display: inline-block; width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">🎧</div>
+    <div class="header-text">
+      <h1>Walmart Price Tracker</h1>
+      <p id="header-subtitle">AirPods Pro 3</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-status">Status</div>
+    <div class="tab" id="tab-settings">Settings</div>
+  </div>
+
+  <!-- STATUS PANEL -->
+  <div class="panel active" id="panel-status">
+    <div class="content">
+      <div class="status-card">
+        <div class="status-row">
+          <span class="label">Current Price</span>
+          <span class="price-val unknown" id="price">—</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Alert Threshold</span>
+          <span class="threshold-text" id="threshold-display">$250.00</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Check Interval</span>
+          <span class="time-val" id="interval-display">Every 1 min</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Last Checked</span>
+          <span class="time-val" id="last-checked">Never</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Alert Status</span>
+          <span class="alert-badge inactive" id="alert-badge">
+            <span class="dot"></span>
+            <span id="alert-text">Watching</span>
+          </span>
+        </div>
+      </div>
+
+      <div id="error-container"></div>
+
+      <button class="btn btn-primary" id="check-now-btn">Check Price Now</button>
+      <button class="btn btn-secondary" id="view-walmart-btn">View on Walmart ↗</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="panel" id="panel-settings">
+    <div class="content">
+      <div class="settings-section">
+        <div class="settings-section-title">Price Alert</div>
+        <div class="field">
+          <label>Alert me when price drops below</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="input-threshold" min="1" max="9999" step="1" placeholder="250">
+          </div>
+          <div class="preset-row">
+            <div class="preset threshold-preset" data-value="200">$200</div>
+            <div class="preset threshold-preset" data-value="225">$225</div>
+            <div class="preset threshold-preset" data-value="250">$250</div>
+            <div class="preset threshold-preset" data-value="275">$275</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Check Frequency</div>
+        <div class="field">
+          <label>Check price every</label>
+          <div class="input-wrap">
+            <input type="number" id="input-interval" class="no-prefix" min="1" max="60" step="1" placeholder="1">
+            <span class="input-suffix">min</span>
+          </div>
+          <div class="preset-row">
+            <div class="preset interval-preset" data-value="1">1 min</div>
+            <div class="preset interval-preset" data-value="5">5 min</div>
+            <div class="preset interval-preset" data-value="15">15 min</div>
+            <div class="preset interval-preset" data-value="30">30 min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-confirm" id="save-confirm">✓ Settings saved & timer reset!</div>
+      <button class="btn btn-success" id="save-btn">Save Settings</button>
+      <button class="btn btn-secondary" id="back-btn">← Back to Status</button>
+    </div>
+  </div>
+
+  <div class="footer" id="footer-text">
+    Checks every 1 min · <a href="https://www.walmart.com/ip/AirPods-Pro-3/17835006350" target="_blank">walmart.com</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
