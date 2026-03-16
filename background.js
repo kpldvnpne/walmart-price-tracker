@@ -70,18 +70,23 @@ async function checkPrice() {
 }
 
 function extractPrice(html) {
-  const patterns = [
-    /"priceInfo":\{"currentPrice":\{"price":(\d+(?:\.\d+)?)/,
-    /"currentPrice":\{"price":(\d+(?:\.\d+)?)/,
-    /itemprop="price"\s+content="(\d+(?:\.\d+)?)"/,
-    /"price":(\d+(?:\.\d+)?),"currencyUnit":"USD"/,
-    /\$(\d+\.\d{2})/
-  ];
+  const scriptTags = [...html.matchAll(/<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/gi)];
 
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match) return parseFloat(match[1]);
+  for (const [, content] of scriptTags) {
+    let parsed;
+    try { parsed = JSON.parse(content); } catch { continue; }
+
+    const product = parsed?.props?.pageProps?.initialData?.data?.product;
+    if (!product) continue;
+
+    const name = product.name ?? product.title ?? "";
+    const isMatch = ["Apple", "AirPods", "Pro", "3"].every(word => name.includes(word));
+    if (!isMatch) continue;
+
+    const price = product.priceInfo?.currentPrice?.price;
+    if (price != null) return parseFloat(price);
   }
+
   return null;
 }
 
